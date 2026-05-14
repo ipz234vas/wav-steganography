@@ -1,0 +1,167 @@
+﻿<Window x:Class="AudioSteganography.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ScottPlot="clr-namespace:ScottPlot.WPF;assembly=ScottPlot.WPF"
+        Title="Аудіостеганографія (LSB + PRNG)" Height="750" Width="900"
+        Background="#F4F6F9" WindowStartupLocation="CenterScreen">
+
+    <Window.Resources>
+        <Style x:Key="MainButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#007ACC"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="16,0"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#005999"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="PlayButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#28A745"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="Width" Value="32"/>
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="16">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Opacity" Value="0.8"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="TextBox">
+            <Setter Property="Padding" Value="5"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Margin" Value="0,5,0,15"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="60"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Background="#007ACC">
+            <TextBlock Text="Лабораторна 4: Аудіостеганографія (WAV)" FontSize="22" FontWeight="Bold" Foreground="White"
+                       VerticalAlignment="Center" HorizontalAlignment="Center"/>
+        </Border>
+
+        <TabControl Grid.Row="1" Margin="20" Background="White" BorderThickness="0">
+
+            <TabItem Header="1. Приховати повідомлення" FontSize="16" FontWeight="SemiBold">
+                <Grid Margin="20">
+                    <StackPanel>
+                        <TextBlock Text="Виберіть оригінальний аудіофайл (WAV):" FontWeight="Bold"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="120"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox x:Name="InputWavTxt" IsReadOnly="True" Background="#EEE"/>
+                            <Button Grid.Column="1" Content="Огляд..." Margin="10,5,0,15" Style="{StaticResource MainButtonStyle}" Click="BrowseInputWav_Click"/>
+                        </Grid>
+
+                        <TextBlock Text="Секретне повідомлення:" FontWeight="Bold"/>
+                        <TextBox x:Name="SecretMessageTxt" Height="100" AcceptsReturn="True" TextWrapping="Wrap"/>
+
+                        <Border Background="#E8F4FA" Padding="15" CornerRadius="8" Margin="0,0,0,15">
+                            <StackPanel>
+                                <TextBlock Text="Додатковий захист (PRNG):" FontWeight="Bold" Foreground="#005999"/>
+                                <TextBlock Text="Якщо ввести пароль, біти будуть розкидані по файлу псевдовипадково." FontSize="12" Foreground="#555" Margin="0,0,0,5"/>
+                                <TextBox x:Name="EmbedPasswordTxt" MaxLength="50"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Button Content="Вбудувати та Зберегти..." Style="{StaticResource MainButtonStyle}" Height="50" Click="Embed_Click"/>
+                        <TextBlock x:Name="EmbedStatusLbl" Text="" FontWeight="Bold" Margin="0,15,0,0" HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="2. Вилучити повідомлення" FontSize="16" FontWeight="SemiBold">
+                <Grid Margin="20">
+                    <StackPanel>
+                        <TextBlock Text="Виберіть стего-файл (WAV з прихованими даними):" FontWeight="Bold"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="120"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox x:Name="ExtractWavTxt" IsReadOnly="True" Background="#EEE"/>
+                            <Button Grid.Column="1" Content="Огляд..." Margin="10,5,0,15" Style="{StaticResource MainButtonStyle}" Click="BrowseExtractWav_Click"/>
+                        </Grid>
+
+                        <TextBlock Text="Пароль (залиште порожнім, якщо не використовувався):" FontWeight="Bold"/>
+                        <TextBox x:Name="ExtractPasswordTxt" MaxLength="50"/>
+
+                        <Button Content="Вилучити повідомлення" Style="{StaticResource MainButtonStyle}" Height="50" Click="Extract_Click"/>
+
+                        <TextBlock Text="Знайдене повідомлення:" FontWeight="Bold" Margin="0,20,0,0"/>
+                        <TextBox x:Name="ExtractedMessageTxt" Height="150" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" Background="#FAFAFA" Foreground="DarkGreen" FontWeight="Bold"/>
+                    </StackPanel>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="3. Аналіз хвиль" FontSize="16" FontWeight="SemiBold">
+                <Grid Margin="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,10">
+                        <Button Content="Побудувати графіки для порівняння" Style="{StaticResource MainButtonStyle}" Width="300" Click="PlotWaveforms_Click"/>
+                    </StackPanel>
+
+                    <Border Grid.Row="1" BorderBrush="#CCC" BorderThickness="1" Margin="5">
+                        <Grid>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,10,0,0" Panel.ZIndex="1">
+                                <TextBlock Text="Оригінальний файл" FontWeight="Bold" VerticalAlignment="Center" Margin="10,0,10,0"/>
+                                <Button x:Name="BtnPlayOriginal" Content="▶" Style="{StaticResource PlayButtonStyle}" Click="BtnPlayOriginal_Click"/>
+                            </StackPanel>
+                            <ScottPlot:WpfPlot x:Name="PlotOriginal" Margin="0,30,0,0"/>
+                        </Grid>
+                    </Border>
+
+                    <Border Grid.Row="2" BorderBrush="#CCC" BorderThickness="1" Margin="5">
+                        <Grid>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,10,0,0" Panel.ZIndex="1">
+                                <TextBlock Text="Стего-файл (з даними)" FontWeight="Bold" VerticalAlignment="Center" Margin="10,0,10,0"/>
+                                <Button x:Name="BtnPlayStego" Content="▶" Style="{StaticResource PlayButtonStyle}" Click="BtnPlayStego_Click"/>
+                            </StackPanel>
+                            <ScottPlot:WpfPlot x:Name="PlotStego" Margin="0,30,0,0"/>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+        </TabControl>
+    </Grid>
+</Window>
