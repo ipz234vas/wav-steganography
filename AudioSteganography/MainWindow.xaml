@@ -134,6 +134,7 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                         <RowDefinition Height="*"/>
+                        <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
                     <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,10">
@@ -159,9 +160,18 @@
                             <ScottPlot:WpfPlot x:Name="PlotStego" Margin="0,30,0,0"/>
                         </Grid>
                     </Border>
+
+                    <Border Grid.Row="3" BorderBrush="#CCC" BorderThickness="1" Margin="5">
+                        <Grid>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,10,0,0" Panel.ZIndex="1">
+                                <TextBlock Text="Різниця (Модифіковані біти)" FontWeight="Bold" Foreground="#DC3545" VerticalAlignment="Center" Margin="10,0,10,0"/>
+                            </StackPanel>
+                            <ScottPlot:WpfPlot x:Name="PlotDifference" Margin="0,30,0,0"/>
+                        </Grid>
+                    </Border>
+
                 </Grid>
             </TabItem>
-
         </TabControl>
     </Grid>
 </Window>

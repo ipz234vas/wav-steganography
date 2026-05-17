@@ -136,8 +136,9 @@ namespace AudioSteganography
             try
             {
                 DrawWaveform(PlotOriginal, _originalWavPath, "Оригінальний сигнал", System.Drawing.Color.Blue);
-
                 DrawWaveform(PlotStego, _stegoWavPath, "Стего-сигнал", System.Drawing.Color.Teal);
+
+                DrawDifferenceWaveform(PlotDifference, _originalWavPath, _stegoWavPath, "Різниця (Модифіковані біти)");
             }
             catch (Exception ex)
             {
@@ -182,6 +183,54 @@ namespace AudioSteganography
             plotControl.Plot.Axes.Title.Label.Text = title;
             plotControl.Plot.Axes.Bottom.Label.Text = "Час (секунди)";
             plotControl.Plot.Axes.Left.Label.Text = "Амплітуда";
+
+            plotControl.Refresh();
+        }
+
+        private void DrawDifferenceWaveform(WpfPlot plotControl, string originalWavPath, string stegoWavPath, string title)
+        {
+            plotControl.Plot.Clear();
+
+            using var readerOrig = new AudioFileReader(originalWavPath);
+            using var readerStego = new AudioFileReader(stegoWavPath);
+
+            int sampleCount = (int)Math.Min(readerOrig.Length / 4, readerStego.Length / 4);
+
+            float[] origSamples = new float[sampleCount];
+            float[] stegoSamples = new float[sampleCount];
+
+            readerOrig.Read(origSamples, 0, sampleCount);
+            readerStego.Read(stegoSamples, 0, sampleCount);
+
+            double[] diffSamples = new double[sampleCount];
+            double maxDiff = 0;
+
+            for (int i = 0; i < sampleCount; i++)
+            {
+                double diff = stegoSamples[i] - origSamples[i];
+                diffSamples[i] = diff;
+
+                if (Math.Abs(diff) > maxDiff)
+                {
+                    maxDiff = Math.Abs(diff);
+                }
+            }
+
+            var sig = plotControl.Plot.Add.Signal(diffSamples);
+            double sampleRate = readerOrig.WaveFormat.SampleRate;
+            sig.Data.Period = 1.0 / sampleRate;
+
+            sig.Color = new ScottPlot.Color(220, 53, 69);
+
+            double durationInSeconds = sampleCount / sampleRate;
+            plotControl.Plot.Axes.SetLimitsX(0, durationInSeconds);
+
+            double yLimit = maxDiff > 0 ? maxDiff * 1.5 : 0.0001;
+            plotControl.Plot.Axes.SetLimitsY(-yLimit, yLimit);
+
+            plotControl.Plot.Axes.Title.Label.Text = title;
+            plotControl.Plot.Axes.Bottom.Label.Text = "Час (секунди)";
+            plotControl.Plot.Axes.Left.Label.Text = "Амплітуда (x10^-5)";
 
             plotControl.Refresh();
         }
